@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge — The Full-Stack Product Builder for Hardware Makers</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --border: #1f1f1f;
+            --text: #e5e5e5;
+            --muted: #737373;
+            --accent: #f97316;
+            --accent-dim: #c2410c;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--accent);
+        }
+
+        .nav-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+        }
+
+        .hero {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 6rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent), #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--muted);
+            max-width: 560px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dim);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--muted);
+        }
+
+        .features {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 2rem 6rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-dim);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+            font-size: 0.9375rem;
+        }
+
+        .pipeline {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+            text-align: center;
+        }
+
+        .pipeline h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 2.5rem;
+        }
+
+        .pipeline-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            text-align: left;
+        }
+
+        .step {
+            display: flex;
+            gap: 1.25rem;
+            align-items: flex-start;
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .step:last-child { padding-bottom: 0; }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--accent);
+            position: relative;
+            z-index: 1;
+        }
+
+        .step:not(:last-child) .step-num::after {
+            content: '';
+            position: absolute;
+            top: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: calc(100% + 2rem - 36px);
+            background: var(--border);
+        }
+
+        .step-content h4 {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            padding-top: 0.35rem;
+        }
+
+        .step-content p {
+            color: var(--muted);
+            font-size: 0.9375rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 600px) {
+            .hero { padding: 4rem 1.5rem 3rem; }
+            .features { padding: 2rem 1.5rem 4rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Forge</div>
+        <div class="nav-badge">Coming Soon</div>
+    </nav>
+
+    <section class="hero">
+        <h1>From hardware hack to <span>shippable product.</span></h1>
+        <p>Forge takes your DIY hardware project and generates the full software stack — firmware, companion app, API, docs — ready to ship.</p>
+        <div class="cta-group">
+            <a href="#notify" class="btn btn-primary">Get Early Access</a>
+            <a href="#how" class="btn btn-secondary">See How It Works</a>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <span class="feature-icon">&#9881;</span>
+            <h3>Hardware Intake Engine</h3>
+            <p>Upload schematics, pick from a board library, or declare pins visually. Forge builds an internal model of your device.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">&#9000;</span>
+            <h3>Firmware Generator</h3>
+            <p>Describe behavior in plain English. Get clean, production-ready firmware in C++, MicroPython, or Rust with OTA built in.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">&#9898;</span>
+            <h3>Companion App Builder</h3>
+            <p>Auto-generated mobile or web dashboard pre-wired to your device data. Real-time visualization, alerts, and device config.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">&#8644;</span>
+            <h3>API &amp; Integrations</h3>
+            <p>REST, WebSocket, and MQTT APIs auto-generated with OpenAPI docs. Plug into Home Assistant, Zapier, and more.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">&#128230;</span>
+            <h3>Product Export Pack</h3>
+            <p>Developer docs, user manual, safety checklists, storefront scaffold, and a GitHub-ready repo. Ship it as a real product.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">&#9889;</span>
+            <h3>AI-Powered</h3>
+            <p>Powered by Claude. Describe what you want, and Forge generates firmware, docs, and app scaffolding intelligently.</p>
+        </div>
+    </section>
+
+    <section class="pipeline" id="how">
+        <h2>How Forge Works</h2>
+        <div class="pipeline-steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h4>Describe Your Hardware</h4>
+                    <p>Upload a schematic, pick a board, or declare your pin layout.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>Forge Understands Your Device</h4>
+                    <p>An internal model is built — pins, buses, peripherals, power constraints.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h4>Generate the Full Stack</h4>
+                    <p>Firmware, companion app, API spec, and documentation — all derived from your hardware model.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <h4>Customize &amp; Test</h4>
+                    <p>Tweak the generated code, test on real hardware, iterate.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-content">
+                    <h4>Export as a Shippable Product</h4>
+                    <p>One click to get docs, storefront page, GitHub repo, and compliance checklists.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2026 Forge. Built for makers who ship.
+    </footer>
+</body>
+</html>
