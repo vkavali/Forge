@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface GenerationJobRepository extends JpaRepository<GenerationJob, UUID> {
     List<GenerationJob> findByProjectIdOrderByCreatedAtDesc(UUID projectId);
+    List<GenerationJob> findByStatus(String status);
 }

@@ -15,6 +15,7 @@ import com.theshipboard.project.entity.Project;
 import com.theshipboard.project.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -28,6 +29,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GenerationService {
 
     private static final Logger log = LoggerFactory.getLogger(GenerationService.class);
+
+    @PostConstruct
+    public void cleanupStaleJobs() {
+        List<GenerationJob> stale = jobRepository.findByStatus("RUNNING");
+        stale.addAll(jobRepository.findByStatus("PENDING"));
+        for (GenerationJob job : stale) {
+            job.setStatus("FAILED");
+            job.setErrorMessage("Server restarted during generation");
+            job.setCompletedAt(Instant.now());
+            jobRepository.save(job);
+        }
+        if (!stale.isEmpty()) {
+            log.info("Cleaned up {} stale jobs on startup", stale.size());
+        }
+    }
     private final GenerationJobRepository jobRepository;
     private final ProjectService projectService;
     private final IntentExtractionService intentService;
