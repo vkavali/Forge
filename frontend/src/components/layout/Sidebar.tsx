@@ -27,7 +27,7 @@ export default function Sidebar() {
       <div className="p-6 border-b border-gray-800">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Cpu className="w-8 h-8 text-amber-500" />
-          <span className="text-xl font-bold text-white">Forge</span>
+          <span className="text-xl font-bold text-white">TheShipboard</span>
         </Link>
       </div>
       <nav className="flex-1 p-4 space-y-1">

@@ -28,7 +28,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Card><CardHeader className="text-center"><div className="flex justify-center mb-4"><Cpu className="w-10 h-10 text-amber-500" /></div><CardTitle>Welcome back</CardTitle><CardDescription>Sign in to your Forge account</CardDescription></CardHeader>
+    <Card><CardHeader className="text-center"><div className="flex justify-center mb-4"><Cpu className="w-10 h-10 text-amber-500" /></div><CardTitle>Welcome back</CardTitle><CardDescription>Sign in to your TheShipboard account</CardDescription></CardHeader>
       <CardContent><form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-red-400 text-center">{error}</p>}
         <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />

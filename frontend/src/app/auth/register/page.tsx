@@ -29,7 +29,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card><CardHeader className="text-center"><div className="flex justify-center mb-4"><Cpu className="w-10 h-10 text-amber-500" /></div><CardTitle>Create an account</CardTitle><CardDescription>Get started with Forge</CardDescription></CardHeader>
+    <Card><CardHeader className="text-center"><div className="flex justify-center mb-4"><Cpu className="w-10 h-10 text-amber-500" /></div><CardTitle>Create an account</CardTitle><CardDescription>Get started with TheShipboard</CardDescription></CardHeader>
       <CardContent><form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-red-400 text-center">{error}</p>}
         <Input placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />

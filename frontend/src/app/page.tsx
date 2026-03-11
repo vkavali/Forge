@@ -243,7 +243,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Cpu className="w-7 h-7 text-amber-500" />
-            <span className="text-xl font-bold text-white">Forge</span>
+            <span className="text-xl font-bold text-white">TheShipboard</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
             <a href="#categories" className="hover:text-white transition-colors">Categories</a>
@@ -423,7 +423,7 @@ void setup() {
     mqtt.setServer(MQTT_BROKER, MQTT_PORT);
     mqtt.connect(DEVICE_ID);
 
-    Serial.println("[ Forge ] Firmware ready.");
+    Serial.println("[ TheShipboard ] Firmware ready.");
 }
 
 void loop() {
@@ -454,7 +454,7 @@ void loop() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Built For Hardware Makers</h2>
             <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-              Whether you&apos;re a weekend tinkerer or a professional engineer, Forge accelerates your workflow.
+              Whether you&apos;re a weekend tinkerer or a professional engineer, TheShipboard accelerates your workflow.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -521,7 +521,7 @@ void loop() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Cpu className="w-5 h-5 text-amber-500" />
-                <span className="font-semibold text-white">Forge</span>
+                <span className="font-semibold text-white">TheShipboard</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
                 AI-powered hardware development platform. Generate firmware, docs, BOM, and deploy configs for any DIY project.
@@ -557,7 +557,7 @@ void loop() {
           </div>
           <div className="border-t border-gray-800 pt-6 flex items-center justify-between">
             <p className="text-sm text-gray-600">Built with AI for hardware makers</p>
-            <p className="text-sm text-gray-600">&copy; {new Date().getFullYear()} Forge</p>
+            <p className="text-sm text-gray-600">&copy; {new Date().getFullYear()} TheShipboard</p>
           </div>
         </div>
       </footer>
