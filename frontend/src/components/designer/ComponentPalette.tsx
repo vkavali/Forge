@@ -1,144 +1,141 @@
-'use client';
+'use client'
 
-import { useState, useMemo } from 'react';
-import { COMPONENT_CATALOG, CATEGORY_COLORS, CATEGORY_LABELS } from './componentCatalog';
-import type { HardwareComponent, ComponentCategory } from './designerTypes';
-import { Input } from '../ui/input';
-import { Search, ChevronDown, ChevronRight } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { useState, useMemo } from 'react'
+import * as Icons from 'lucide-react'
+import { Search, ChevronDown, ChevronRight } from 'lucide-react'
+import { COMPONENT_CATALOG, CATEGORY_CONFIG } from './componentCatalog'
+import type { ComponentCategory, HardwareComponent } from './designerTypes'
 
-export default function ComponentPalette() {
-  const [search, setSearch] = useState('');
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+function ComponentTile({ component }: { component: HardwareComponent }) {
+  const config = CATEGORY_CONFIG[component.category] || CATEGORY_CONFIG.misc
+  const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[component.icon] || Icons.Cpu
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return COMPONENT_CATALOG;
-    const q = search.toLowerCase();
-    return COMPONENT_CATALOG.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
-        c.category.toLowerCase().includes(q)
-    );
-  }, [search]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<ComponentCategory, HardwareComponent[]>();
-    for (const comp of filtered) {
-      const list = map.get(comp.category) || [];
-      list.push(comp);
-      map.set(comp.category, list);
-    }
-    return map;
-  }, [filtered]);
-
-  const categoryOrder: ComponentCategory[] = [
-    'sensor', 'display', 'actuator', 'communication',
-    'storage', 'audio', 'motor', 'timing', 'misc',
-  ];
-
-  const toggleCategory = (cat: string) => {
-    setCollapsed((prev) => ({ ...prev, [cat]: !prev[cat] }));
-  };
-
-  const onDragStart = (e: React.DragEvent, componentId: string) => {
-    e.dataTransfer.setData('application/designer-component', componentId);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  const onDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('application/shipboard-component', component.id)
+    e.dataTransfer.effectAllowed = 'copy'
+  }
 
   return (
-    <div className="w-[260px] min-w-[260px] bg-gray-900 border-r border-gray-800 flex flex-col h-full overflow-hidden">
+    <div
+      draggable
+      onDragStart={onDragStart}
+      title={component.description}
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab
+                  border transition-all select-none
+                  bg-zinc-900/50 hover:bg-zinc-800 active:scale-95
+                  ${config.border} hover:border-opacity-60`}
+    >
+      <Icon className={`w-3.5 h-3.5 shrink-0 ${config.color}`} />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-zinc-300 truncate leading-tight">{component.label}</p>
+        <p className="text-[10px] text-zinc-600 truncate">${component.estimatedCostUsd.toFixed(2)}</p>
+      </div>
+    </div>
+  )
+}
+
+function CategorySection({
+  category, components,
+}: { category: ComponentCategory; components: HardwareComponent[] }) {
+  const [open, setOpen] = useState(true)
+  const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.misc
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center justify-between w-full px-2 py-1.5
+                    text-xs font-medium rounded-lg transition-colors
+                    hover:bg-zinc-800/50 ${config.color}`}
+      >
+        <span>{config.label} ({components.length})</span>
+        {open
+          ? <ChevronDown className="w-3 h-3" />
+          : <ChevronRight className="w-3 h-3" />
+        }
+      </button>
+      {open && (
+        <div className="mt-1 space-y-0.5 pl-1">
+          {components.map(c => <ComponentTile key={c.id} component={c} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function ComponentPalette() {
+  const [search, setSearch] = useState('')
+
+  const filtered = useMemo(() => {
+    if (!search) return COMPONENT_CATALOG
+    const q = search.toLowerCase()
+    return COMPONENT_CATALOG.filter(c =>
+      c.label.toLowerCase().includes(q) ||
+      c.displayName.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q)
+    )
+  }, [search])
+
+  const grouped = useMemo(() => {
+    return filtered.reduce((acc, c) => {
+      if (!acc[c.category]) acc[c.category] = []
+      acc[c.category].push(c)
+      return acc
+    }, {} as Record<ComponentCategory, HardwareComponent[]>)
+  }, [filtered])
+
+  const categoryOrder: ComponentCategory[] = [
+    'sensor', 'display', 'actuator', 'motor',
+    'communication', 'storage', 'audio', 'timing', 'misc',
+  ]
+
+  return (
+    <div className="flex flex-col h-full bg-zinc-950 border-r border-zinc-800">
       {/* Header */}
-      <div className="px-3 py-3 border-b border-gray-800">
-        <h3 className="text-sm font-semibold text-gray-200 mb-2">Components</h3>
+      <div className="p-3 border-b border-zinc-800">
+        <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-2">
+          Components
+        </p>
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <Input
-            placeholder="Search components..."
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-600" />
+          <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-8 text-xs"
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg
+                       pl-7 pr-3 py-1.5 text-xs text-zinc-300
+                       placeholder:text-zinc-600 focus:outline-none
+                       focus:border-amber-500/50 transition-colors"
           />
         </div>
       </div>
 
       {/* Component list */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-        {categoryOrder.map((cat) => {
-          const items = grouped.get(cat);
-          if (!items || items.length === 0) return null;
-          const colors = CATEGORY_COLORS[cat];
-          const isCollapsed = collapsed[cat];
-
+      <div className="flex-1 overflow-y-auto p-2 space-y-3">
+        {categoryOrder.map(cat => {
+          const comps = grouped[cat]
+          if (!comps?.length) return null
           return (
-            <div key={cat}>
-              {/* Category header */}
-              <button
-                onClick={() => toggleCategory(cat)}
-                className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold ${colors.text} hover:bg-gray-800/50 transition-colors`}
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-                {CATEGORY_LABELS[cat]}
-                <span className="text-gray-600 font-normal ml-auto">{items.length}</span>
-              </button>
-
-              {/* Component tiles */}
-              {!isCollapsed && (
-                <div className="space-y-0.5 ml-1">
-                  {items.map((comp) => (
-                    <ComponentTile key={comp.id} comp={comp} onDragStart={onDragStart} />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
+            <CategorySection
+              key={cat}
+              category={cat}
+              components={comps}
+            />
+          )
         })}
-
         {filtered.length === 0 && (
-          <div className="text-center text-gray-600 text-xs py-8">No components found</div>
+          <p className="text-xs text-zinc-600 text-center py-4">
+            No components match &quot;{search}&quot;
+          </p>
         )}
       </div>
 
-      {/* Footer hint */}
-      <div className="px-3 py-2 border-t border-gray-800 text-[10px] text-gray-600">
-        Drag components onto the canvas
+      {/* Drag hint */}
+      <div className="p-2 border-t border-zinc-800">
+        <p className="text-[10px] text-zinc-700 text-center">
+          Drag components onto the canvas
+        </p>
       </div>
     </div>
-  );
-}
-
-function ComponentTile({
-  comp,
-  onDragStart,
-}: {
-  comp: HardwareComponent;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-}) {
-  const colors = CATEGORY_COLORS[comp.category];
-  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[comp.icon] || LucideIcons.CircuitBoard;
-
-  return (
-    <div
-      draggable
-      onDragStart={(e) => onDragStart(e, comp.id)}
-      className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-grab active:cursor-grabbing
-        hover:${colors.bg} border border-transparent hover:${colors.border}
-        transition-all group`}
-      title={comp.description}
-    >
-      <IconComponent className={`w-3.5 h-3.5 ${colors.text} opacity-70 group-hover:opacity-100`} />
-      <div className="flex-1 min-w-0">
-        <div className="text-xs text-gray-300 truncate">{comp.name}</div>
-        <div className="text-[10px] text-gray-600 truncate">{comp.description}</div>
-      </div>
-      {comp.pins.length > 0 && (
-        <span className="text-[9px] text-gray-600">{comp.pins.length}p</span>
-      )}
-    </div>
-  );
+  )
 }

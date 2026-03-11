@@ -1,23 +1,14 @@
-import type { Node, Edge } from '@xyflow/react';
+export type PinType =
+  | 'digital'
+  | 'analog'
+  | 'i2c'
+  | 'spi'
+  | 'uart'
+  | 'pwm'
+  | 'power'
+  | 'ground'
 
-// Pin type for a hardware component (sensor, display, etc.)
-export interface ComponentPin {
-  id: string;
-  label: string;
-  type: 'digital' | 'analog' | 'i2c' | 'spi' | 'uart' | 'pwm' | 'power' | 'ground' | 'data';
-  side: 'left' | 'right';
-  required: boolean;
-}
-
-// Catalog entry for a hardware component
-export interface HardwareComponent {
-  id: string;
-  name: string;
-  category: ComponentCategory;
-  description: string;
-  icon: string; // lucide icon name
-  pins: ComponentPin[];
-}
+export type PinSide = 'left' | 'right' | 'top' | 'bottom'
 
 export type ComponentCategory =
   | 'sensor'
@@ -28,44 +19,57 @@ export type ComponentCategory =
   | 'audio'
   | 'motor'
   | 'timing'
-  | 'misc';
+  | 'misc'
 
-// Data stored inside a ReactFlow node for a placed component
-export interface PlacedComponentData {
-  componentId: string;
-  label: string;
-  category: ComponentCategory;
-  icon: string;
-  pins: ComponentPin[];
-  [key: string]: unknown;
+export interface ComponentPin {
+  id: string
+  label: string
+  type: PinType
+  side: PinSide
+  required: boolean
 }
 
-// GPIO pin on a board
+export interface HardwareComponent {
+  id: string
+  label: string
+  displayName: string
+  category: ComponentCategory
+  icon: string
+  description: string
+  educationTip: string
+  estimatedCostUsd: number
+  whereToBuy: string[]
+  voltageWarning?: string
+  pins: ComponentPin[]
+}
+
 export interface BoardGpioPin {
-  id: string;
-  label: string;
-  altFunction?: string; // e.g. "SDA", "SCL", "MOSI"
-  capabilities: string[]; // e.g. ["digital", "i2c", "pwm"]
-  side: 'left' | 'right';
+  id: string
+  label: string
+  type: PinType
+  side: 'left' | 'right'
+  i2cBus?: boolean
 }
 
-// Data stored inside a ReactFlow node for the board
+export interface PlacedComponentData {
+  component: HardwareComponent
+  [key: string]: unknown
+}
+
 export interface PlacedBoardData {
-  boardId: string;
-  boardName: string;
-  processor: string;
-  pins: BoardGpioPin[];
-  [key: string]: unknown;
+  boardId: string
+  boardName: string
+  processor: string
+  pins: BoardGpioPin[]
+  [key: string]: unknown
 }
 
-// Board pin map definition
-export interface BoardPinMap {
-  id: string;
-  pins: BoardGpioPin[];
+export interface PinMapping {
+  pin: string
+  component: string
+  description: string
 }
 
-// Custom node types
-export type ComponentNodeType = Node<PlacedComponentData, 'component'>;
-export type BoardNodeType = Node<PlacedBoardData, 'board'>;
-export type DesignerNode = ComponentNodeType | BoardNodeType;
-export type DesignerEdge = Edge;
+export interface ConnectionsConfig {
+  pins: PinMapping[]
+}

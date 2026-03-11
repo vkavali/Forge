@@ -1,76 +1,70 @@
-'use client';
+'use client'
 
-import { memo, useState } from 'react';
-import { getSmoothStepPath } from '@xyflow/react';
-import type { EdgeProps } from '@xyflow/react';
-import { useDesignerStore } from './useDesignerStore';
+import { memo, useState } from 'react'
+import { getSmoothStepPath, EdgeLabelRenderer } from '@xyflow/react'
+import type { EdgeProps } from '@xyflow/react'
+import { X } from 'lucide-react'
+import { useDesignerStore } from './useDesignerStore'
 
 function WireEdgeComponent({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  data,
+  id, sourceX, sourceY, targetX, targetY,
+  sourcePosition, targetPosition, style,
 }: EdgeProps) {
-  const removeEdge = useDesignerStore((s) => s.removeEdge);
-  const [hovered, setHovered] = useState(false);
-  const isPowerOrGround = data?.isPowerOrGround;
+  const [hovered, setHovered] = useState(false)
+  const deleteEdge = useDesignerStore(s => s.deleteEdge)
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    borderRadius: 12,
-  });
+    sourceX, sourceY, sourcePosition,
+    targetX, targetY, targetPosition,
+    borderRadius: 8,
+  })
+
+  const strokeColor = (style?.stroke as string) || '#f59e0b'
 
   return (
-    <g
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Invisible wider path for easier hover */}
+    <>
+      {/* Invisible wider hit area */}
       <path
         d={edgePath}
         fill="none"
         stroke="transparent"
-        strokeWidth={16}
+        strokeWidth={12}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{ cursor: 'pointer' }}
       />
       {/* Visible wire */}
       <path
         d={edgePath}
         fill="none"
-        stroke={hovered ? '#ef4444' : isPowerOrGround ? '#555' : '#d97706'}
-        strokeWidth={hovered ? 3 : 2}
-        style={{ transition: 'stroke 0.15s, stroke-width 0.15s' }}
+        stroke={hovered ? '#fbbf24' : strokeColor}
+        strokeWidth={hovered ? 2.5 : 2}
+        strokeLinecap="round"
+        style={{ transition: 'stroke 0.15s, stroke-width 0.15s', pointerEvents: 'none' }}
       />
+
       {/* Delete button on hover */}
       {hovered && (
-        <g
-          transform={`translate(${labelX}, ${labelY})`}
-          onClick={() => removeEdge(id)}
-          style={{ cursor: 'pointer' }}
-        >
-          <circle r="8" fill="#1a1a1a" stroke="#ef4444" strokeWidth="1.5" />
-          <text
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="#ef4444"
-            fontSize="11"
-            fontWeight="bold"
+        <EdgeLabelRenderer>
+          <div
+            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+            className="absolute nodrag nopan"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
           >
-            x
-          </text>
-        </g>
+            <button
+              onClick={() => deleteEdge(id)}
+              className="flex items-center justify-center w-4 h-4 rounded-full
+                         bg-zinc-800 border border-zinc-600 hover:bg-red-900
+                         hover:border-red-500 transition-colors"
+            >
+              <X className="w-2.5 h-2.5 text-zinc-400 hover:text-red-400" />
+            </button>
+          </div>
+        </EdgeLabelRenderer>
       )}
-    </g>
-  );
+    </>
+  )
 }
 
-export default memo(WireEdgeComponent);
+export default memo(WireEdgeComponent)

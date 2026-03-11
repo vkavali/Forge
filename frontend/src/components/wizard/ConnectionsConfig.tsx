@@ -6,17 +6,17 @@ import { api } from '../../lib/api';
 import { BoardDefinition } from '../../lib/types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { ArrowLeft, Plus, Trash2, PenTool, Table, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Workflow, Grid3x3, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const HardwareDesigner = dynamic(
   () => import('../designer/HardwareDesigner'),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-[600px] text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading designer...</div> }
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[640px] text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading designer...</div> }
 );
 
 interface PinMapping { pin: string; component: string; description: string; }
 
-type DesignerMode = 'visual' | 'table';
+type DesignerMode = 'visual' | 'manual';
 
 export default function ConnectionsConfig() {
   const { wizardData, updateWizardData, setWizardStep } = useProjectStore();
@@ -79,36 +79,35 @@ export default function ConnectionsConfig() {
         </div>
 
         {/* Mode toggle */}
-        <div className="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-700">
+        <div className="flex gap-2">
           <button
             onClick={() => setMode('visual')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              mode === 'visual'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm
+                        border transition-all
+                        ${mode === 'visual'
+                          ? 'bg-amber-500/10 border-amber-500/50 text-amber-400'
+                          : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:border-zinc-600'}`}
           >
-            <PenTool className="w-3.5 h-3.5" />
+            <Workflow className="w-4 h-4" />
             Visual Designer
           </button>
           <button
-            onClick={() => setMode('table')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              mode === 'table'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
+            onClick={() => setMode('manual')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm
+                        border transition-all
+                        ${mode === 'manual'
+                          ? 'bg-amber-500/10 border-amber-500/50 text-amber-400'
+                          : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:border-zinc-600'}`}
           >
-            <Table className="w-3.5 h-3.5" />
+            <Grid3x3 className="w-4 h-4" />
             Manual Table
           </button>
         </div>
       </div>
 
       {mode === 'visual' ? (
-        /* Visual designer mode */
         boardLoading ? (
-          <div className="flex items-center justify-center h-[600px] text-gray-400">
+          <div className="flex items-center justify-center h-[640px] text-gray-400">
             <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading board...
           </div>
         ) : board ? (
@@ -123,7 +122,6 @@ export default function ConnectionsConfig() {
           <div className="text-gray-400 text-center py-12">Board not found. Please go back and select a board.</div>
         )
       ) : (
-        /* Manual table mode */
         <>
           <div className="space-y-3">
             <div className="grid grid-cols-[1fr_1fr_2fr_auto] gap-2 text-xs text-gray-500 px-1">

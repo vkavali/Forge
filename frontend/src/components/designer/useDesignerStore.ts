@@ -1,177 +1,146 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 import {
   type Node,
   type Edge,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type OnConnect,
   type Connection,
+  type NodeChange,
+  type EdgeChange,
+  addEdge,
   applyNodeChanges,
   applyEdgeChanges,
-} from '@xyflow/react';
-import type { PlacedComponentData, PlacedBoardData, BoardGpioPin } from './designerTypes';
-import { COMPONENT_CATALOG, BOARD_PIN_MAPS, buildGenericPins } from './componentCatalog';
+} from '@xyflow/react'
+import type { ConnectionsConfig, PlacedComponentData, PlacedBoardData, BoardGpioPin } from './designerTypes'
+import { COMPONENT_CATALOG } from './componentCatalog'
 
-interface DesignerState {
-  nodes: Node[];
-  edges: Edge[];
-  onNodesChange: OnNodesChange;
-  onEdgesChange: OnEdgesChange;
-  onConnect: OnConnect;
-  initBoard: (boardId: string, boardName: string, processor: string, interfaces: string[]) => void;
-  addComponent: (componentId: string, position: { x: number; y: number }) => void;
-  removeNode: (nodeId: string) => void;
-  removeEdge: (edgeId: string) => void;
-  toConnectionsConfig: () => { pins: { pin: string; component: string; description: string }[] };
+interface DesignerStore {
+  nodes: Node[]
+  edges: Edge[]
+  onNodesChange: (changes: NodeChange[]) => void
+  onEdgesChange: (changes: EdgeChange[]) => void
+  onConnect: (connection: Connection) => boolean
+  addComponentNode: (componentId: string, position: { x: number; y: number }) => void
+  initBoard: (boardId: string, boardName: string, processor: string, pins: BoardGpioPin[]) => void
+  deleteNode: (nodeId: string) => void
+  deleteEdge: (edgeId: string) => void
+  toConnectionsConfig: () => ConnectionsConfig
+  reset: () => void
 }
 
-let nodeIdCounter = 0;
-function nextNodeId() {
-  return `node_${++nodeIdCounter}`;
-}
-
-let edgeIdCounter = 0;
-function nextEdgeId() {
-  return `edge_${++edgeIdCounter}`;
-}
-
-export const useDesignerStore = create<DesignerState>((set, get) => ({
+export const useDesignerStore = create<DesignerStore>((set, get) => ({
   nodes: [],
   edges: [],
 
-  onNodesChange: (changes) => {
-    set({ nodes: applyNodeChanges(changes, get().nodes) });
-  },
+  onNodesChange: (changes) =>
+    set((state) => ({ nodes: applyNodeChanges(changes, state.nodes) })),
 
-  onEdgesChange: (changes) => {
-    set({ edges: applyEdgeChanges(changes, get().edges) });
-  },
+  onEdgesChange: (changes) =>
+    set((state) => ({ edges: applyEdgeChanges(changes, state.edges) })),
 
-  onConnect: (connection: Connection) => {
-    const { edges, nodes } = get();
+  onConnect: (connection) => {
+    const { edges, nodes } = get()
 
-    // Validate: source must be a component node, target must be the board node
-    const sourceNode = nodes.find((n) => n.id === connection.source);
-    const targetNode = nodes.find((n) => n.id === connection.target);
-    if (!sourceNode || !targetNode) return;
-    if (sourceNode.type !== 'component' || targetNode.type !== 'board') return;
+    // Rule 1: Must connect component (source) → board (target)
+    const sourceNode = nodes.find(n => n.id === connection.source)
+    const targetNode = nodes.find(n => n.id === connection.target)
+    if (sourceNode?.type !== 'component' || targetNode?.type !== 'board') return false
 
-    // Check if source handle is already connected (1 wire per component pin)
-    const sourceAlreadyConnected = edges.some(
-      (e) => e.source === connection.source && e.sourceHandle === connection.sourceHandle
-    );
-    if (sourceAlreadyConnected) return;
-
-    // Check if target handle is already connected (1 wire per GPIO, except I2C)
-    const targetPin = (targetNode.data as PlacedBoardData).pins.find(
-      (p: BoardGpioPin) => p.id === connection.targetHandle
-    );
-    const isI2cBus = targetPin && targetPin.capabilities.includes('i2c') &&
-      (targetPin.altFunction === 'SDA' || targetPin.altFunction === 'SCL');
+    // Rule 2: Board pin — max 1 wire (unless I2C bus)
+    const targetPin = (targetNode.data as PlacedBoardData).pins
+      ?.find((p: BoardGpioPin) => p.id === connection.targetHandle)
+    const isI2cBus = targetPin?.i2cBus === true
     if (!isI2cBus) {
-      const targetAlreadyConnected = edges.some(
-        (e) => e.target === connection.target && e.targetHandle === connection.targetHandle
-      );
-      if (targetAlreadyConnected) return;
+      const alreadyConnected = edges.some(
+        e => e.target === connection.target && e.targetHandle === connection.targetHandle
+      )
+      if (alreadyConnected) return false
     }
 
-    // Determine edge style based on pin type
-    const componentData = sourceNode.data as PlacedComponentData;
-    const pin = componentData.pins.find((p) => p.id === connection.sourceHandle);
-    const isPowerOrGround = pin && (pin.type === 'power' || pin.type === 'ground');
+    // Rule 3: Source pin — max 1 wire
+    const sourceAlreadyUsed = edges.some(
+      e => e.source === connection.source && e.sourceHandle === connection.sourceHandle
+    )
+    if (sourceAlreadyUsed) return false
 
-    const newEdge: Edge = {
-      id: nextEdgeId(),
-      source: connection.source,
-      target: connection.target,
-      sourceHandle: connection.sourceHandle,
-      targetHandle: connection.targetHandle,
-      type: 'wire',
-      data: { isPowerOrGround },
-    };
+    // Determine wire color from pin type
+    const compData = sourceNode.data as PlacedComponentData
+    const sourcePin = compData.component.pins.find(p => p.id === connection.sourceHandle)
+    const isPowerOrGround = sourcePin?.type === 'power' || sourcePin?.type === 'ground'
 
-    set({ edges: [...edges, newEdge] });
+    set((state) => ({
+      edges: addEdge({
+        ...connection,
+        type: 'wire',
+        animated: false,
+        style: { stroke: isPowerOrGround ? '#71717a' : '#f59e0b', strokeWidth: 2 },
+        data: { pinType: sourcePin?.type },
+      }, state.edges),
+    }))
+    return true
   },
 
-  initBoard: (boardId, boardName, processor, interfaces) => {
-    nodeIdCounter = 0;
-    edgeIdCounter = 0;
-    const boardPinMap = BOARD_PIN_MAPS.find((b) => b.id === boardId);
-    const pins = boardPinMap ? boardPinMap.pins : buildGenericPins(interfaces);
-
-    const boardNode: Node<PlacedBoardData> = {
+  initBoard: (boardId, boardName, processor, pins) => {
+    const boardNode: Node = {
       id: 'board',
       type: 'board',
-      position: { x: 500, y: 0 },
-      data: { boardId, boardName, processor, pins },
+      position: { x: 300, y: 80 },
       draggable: true,
-    };
-
-    set({ nodes: [boardNode], edges: [] });
+      data: { boardId, boardName, processor, pins } satisfies PlacedBoardData,
+    }
+    set({ nodes: [boardNode], edges: [] })
   },
 
-  addComponent: (componentId, position) => {
-    const comp = COMPONENT_CATALOG.find((c) => c.id === componentId);
-    if (!comp) return;
+  addComponentNode: (componentId, position) => {
+    const component = COMPONENT_CATALOG.find(c => c.id === componentId)
+    if (!component) return
 
-    const nodeId = nextNodeId();
-    const newNode: Node<PlacedComponentData> = {
+    const nodeId = `comp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+    const newNode: Node = {
       id: nodeId,
       type: 'component',
       position,
-      data: {
-        componentId: comp.id,
-        label: comp.name,
-        category: comp.category,
-        icon: comp.icon,
-        pins: comp.pins,
-      },
-    };
-
-    set({ nodes: [...get().nodes, newNode] });
-  },
-
-  removeNode: (nodeId) => {
-    set({
-      nodes: get().nodes.filter((n) => n.id !== nodeId),
-      edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
-    });
-  },
-
-  removeEdge: (edgeId) => {
-    set({ edges: get().edges.filter((e) => e.id !== edgeId) });
-  },
-
-  toConnectionsConfig: () => {
-    const { nodes, edges } = get();
-    const boardNode = nodes.find((n) => n.type === 'board');
-    if (!boardNode) return { pins: [] };
-
-    const boardData = boardNode.data as PlacedBoardData;
-    const pins: { pin: string; component: string; description: string }[] = [];
-
-    for (const edge of edges) {
-      const compNode = nodes.find((n) => n.id === edge.source);
-      if (!compNode || compNode.type !== 'component') continue;
-      const compData = compNode.data as PlacedComponentData;
-
-      // Find the board pin label for this edge
-      const boardPin = boardData.pins.find((p) => p.id === edge.targetHandle);
-      if (!boardPin) continue;
-
-      // Find the component pin for description
-      const compPin = compData.pins.find((p) => p.id === edge.sourceHandle);
-
-      // Skip power/ground pins — they don't need mapping in the config
-      if (compPin && (compPin.type === 'power' || compPin.type === 'ground')) continue;
-
-      pins.push({
-        pin: boardPin.label,
-        component: compData.label,
-        description: `${compData.label} ${compPin?.label || edge.sourceHandle} pin`,
-      });
+      data: { component } satisfies PlacedComponentData,
     }
-
-    return { pins };
+    set((state) => ({ nodes: [...state.nodes, newNode] }))
   },
-}));
+
+  deleteNode: (nodeId) => {
+    set((state) => ({
+      nodes: state.nodes.filter(n => n.id !== nodeId),
+      edges: state.edges.filter(e => e.source !== nodeId && e.target !== nodeId),
+    }))
+  },
+
+  deleteEdge: (edgeId) => {
+    set((state) => ({ edges: state.edges.filter(e => e.id !== edgeId) }))
+  },
+
+  toConnectionsConfig: (): ConnectionsConfig => {
+    const { nodes, edges } = get()
+    const boardNode = nodes.find(n => n.id === 'board')
+    const boardData = boardNode?.data as PlacedBoardData | undefined
+
+    const pins = edges
+      .filter(e => e.target === 'board')
+      .map(e => {
+        const componentNode = nodes.find(n => n.id === e.source)
+        const compData = componentNode?.data as PlacedComponentData | undefined
+        const boardPin = boardData?.pins.find((p: BoardGpioPin) => p.id === e.targetHandle)
+        const compPin = compData?.component.pins.find(p => p.id === e.sourceHandle)
+
+        if (!compData || !boardPin || !compPin) return null
+        // Skip power/ground pins from output
+        if (compPin.type === 'power' || compPin.type === 'ground') return null
+
+        return {
+          pin: boardPin.id,
+          component: compData.component.label,
+          description: `${compData.component.displayName} ${compPin.label} pin`,
+        }
+      })
+      .filter(Boolean) as ConnectionsConfig['pins']
+
+    return { pins }
+  },
+
+  reset: () => set({ nodes: [], edges: [] }),
+}))
