@@ -20,6 +20,7 @@ public class IntentModel {
     private List<SensorIntent> sensors;
     private List<ActuatorIntent> actuators;
     private List<LogicRule> logicRules;
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ConnectivityDeserializer.class)
     private ConnectivityIntent connectivity;
     private List<TimingIntent> timers;
     private List<ConfigConstant> constants;

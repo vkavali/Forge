@@ -28,13 +28,13 @@ export default function LoginPage() {
   };
 
   return (
-    <Card><CardHeader className="text-center"><div className="flex justify-center mb-4"><Cpu className="w-10 h-10 text-blue-500" /></div><CardTitle>Welcome back</CardTitle><CardDescription>Sign in to your TheShipboard account</CardDescription></CardHeader>
+    <Card><CardHeader className="text-center"><div className="flex justify-center mb-4"><Cpu className="w-10 h-10 text-amber-500" /></div><CardTitle>Welcome back</CardTitle><CardDescription>Sign in to your TheShipboard account</CardDescription></CardHeader>
       <CardContent><form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-red-400 text-center">{error}</p>}
         <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <Button type="submit" className="w-full" disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}</Button>
-        <p className="text-sm text-gray-400 text-center">Don&apos;t have an account? <Link href="/auth/register" className="text-blue-400 hover:underline">Sign up</Link></p>
+        <p className="text-sm text-gray-400 text-center">Don&apos;t have an account? <Link href="/auth/register" className="text-amber-400 hover:underline">Sign up</Link></p>
       </form></CardContent></Card>
   );
 }

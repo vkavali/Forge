@@ -26,13 +26,13 @@ export default function Sidebar() {
     <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">
       <div className="p-6 border-b border-gray-800">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Cpu className="w-8 h-8 text-blue-500" />
+          <Cpu className="w-8 h-8 text-amber-500" />
           <span className="text-xl font-bold text-white">TheShipboard</span>
         </Link>
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
-          <Link key={item.href} href={item.href} className={cn('flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors', pathname === item.href ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:bg-gray-800 hover:text-white')}>
+          <Link key={item.href} href={item.href} className={cn('flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors', pathname === item.href ? 'bg-amber-600/20 text-amber-400' : 'text-gray-400 hover:bg-gray-800 hover:text-white')}>
             <item.icon className="w-5 h-5" />{item.label}
           </Link>
         ))}

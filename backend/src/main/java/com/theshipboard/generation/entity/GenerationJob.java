@@ -36,7 +36,7 @@ public class GenerationJob {
     @Builder.Default
     private Integer progress = 0;
 
-    @Column(name = "current_step")
+    @Column(name = "current_step", columnDefinition = "text")
     private String currentStep;
 
     @Column(name = "current_layer")
@@ -58,7 +58,7 @@ public class GenerationJob {
     @Builder.Default
     private List<String> artifactKeys = List.of();
 
-    @Column(name = "error_message")
+    @Column(name = "error_message", columnDefinition = "text")
     private String errorMessage;
 
     @Column(name = "started_at")
