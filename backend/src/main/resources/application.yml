@@ -4,7 +4,10 @@ server:
 spring:
   application:
     name: theshipboard
-  datasource: {}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/forge}
+    username: ${SPRING_DATASOURCE_USERNAME:forge}
+    password: ${SPRING_DATASOURCE_PASSWORD:forge}
   jpa:
     hibernate:
       ddl-auto: update
