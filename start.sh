@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Railway provides PORT env var - backend uses it
-# Frontend runs on 3000 internally
-export SERVER_PORT=${PORT:-8080}
-
 # Parse Railway's DATABASE_URL into Spring Boot datasource env vars
 # DATABASE_URL format: postgresql://user:password@host:port/database
 if [ -n "$DATABASE_URL" ]; then
@@ -15,13 +11,14 @@ if [ -n "$DATABASE_URL" ]; then
     export SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOSTDB}"
 fi
 
-# Start the Spring Boot backend on Railway's PORT
-java -Dserver.port=$SERVER_PORT -jar /app/backend.jar &
+# Spring Boot on internal port 8081
+java -Dserver.port=8081 -jar /app/backend.jar &
 BACKEND_PID=$!
 
-# Start the Next.js frontend on port 3000 (override PORT so it doesn't use Railway's)
+# Next.js on Railway's public PORT (defaults to 8080)
+# Next.js rewrites proxy /api/* to Spring Boot on 8081
 cd /app/frontend
-PORT=3000 node server.js &
+PORT=${PORT:-8080} node server.js &
 FRONTEND_PID=$!
 
 # Wait for either process to exit
