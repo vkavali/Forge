@@ -156,7 +156,7 @@ export default function GenerationStream({ jobId, onComplete }: Props) {
             }
           }
         }
-      } catch (err) {
+      } catch {
         if (abortController.signal.aborted) return;
         startPolling();
       }
