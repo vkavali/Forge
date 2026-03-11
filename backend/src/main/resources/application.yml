@@ -1,0 +1,44 @@
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: theshipboard
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/forge}
+    username: ${SPRING_DATASOURCE_USERNAME:forge}
+    password: ${SPRING_DATASOURCE_PASSWORD:forge}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+jwt:
+  secret: ${JWT_SECRET:default-dev-secret-key-that-is-at-least-256-bits-long-for-hs256}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+claude:
+  api-key: ${CLAUDE_API_KEY:}
+  model: ${CLAUDE_MODEL:claude-sonnet-4-20250514}
+  max-tokens: 4096
+
+build-runner:
+  url: ${BUILD_RUNNER_URL:http://localhost:5100}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,https://forge-dev-be38.up.railway.app}
+  async:
+    core-pool-size: 4
+    max-pool-size: 8
+    queue-capacity: 100
