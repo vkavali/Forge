@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @ConditionalOnBean(MinioClient.class)
-public class MinioStorageService {
+public class MinioStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(MinioStorageService.class);
     private final MinioClient minioClient;

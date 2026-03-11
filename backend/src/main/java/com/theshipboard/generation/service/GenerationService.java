@@ -40,7 +40,7 @@ public class GenerationService {
     private final AnnotationService annotationService;
     private final ConceptGuideService conceptGuideService;
     private final BuildGuideService buildGuideService;
-    private final MinioStorageService storageService;
+    private final StorageService storageService;
     private final Map<UUID, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     public GenerationService(GenerationJobRepository jobRepository, ProjectService projectService,
@@ -49,7 +49,7 @@ public class GenerationService {
                              DocsEnrichmentService docsService, BomEnrichmentService bomService,
                              ReadmeEnrichmentService readmeService, AnnotationService annotationService,
                              ConceptGuideService conceptGuideService, BuildGuideService buildGuideService,
-                             @org.springframework.beans.factory.annotation.Autowired(required = false) MinioStorageService storageService) {
+                             StorageService storageService) {
         this.jobRepository = jobRepository;
         this.projectService = projectService;
         this.intentService = intentService;
