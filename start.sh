@@ -1,12 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
-# Start the Spring Boot backend
-java -jar /app/backend.jar &
+# Railway provides PORT env var - backend uses it
+# Frontend runs on 3000 internally
+export SERVER_PORT=${PORT:-8080}
 
-# Start the Next.js frontend
+# Start the Spring Boot backend on Railway's PORT
+java -Dserver.port=$SERVER_PORT -jar /app/backend.jar &
+BACKEND_PID=$!
+
+# Start the Next.js frontend on port 3000
 cd /app/frontend
-PORT=3000 node server.js &
+node server.js &
+FRONTEND_PID=$!
 
 # Wait for either process to exit
-wait -n
+wait $BACKEND_PID $FRONTEND_PID
 exit $?
