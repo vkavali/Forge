@@ -28,7 +28,6 @@ COPY --from=backend-build /app/backend/target/*.jar backend.jar
 # Frontend
 COPY --from=frontend-build /app/frontend/.next/standalone ./frontend/
 COPY --from=frontend-build /app/frontend/.next/static ./frontend/.next/static
-COPY --from=frontend-build /app/frontend/public ./frontend/public
 
 COPY start.sh .
 RUN chmod +x start.sh
