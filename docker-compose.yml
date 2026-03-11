@@ -29,6 +29,13 @@ services:
     volumes:
       - miniodata:/data
 
+  build-runner:
+    build: ./build-runner
+    ports:
+      - "5100:5100"
+    environment:
+      PORT: 5100
+
 volumes:
   pgdata:
   miniodata:

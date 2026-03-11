@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>dev.forge</groupId>
-    <artifactId>forge</artifactId>
-    <version>0.1.0</version>
-    <name>Forge</name>
-    <description>TheShipboard — universal firmware/docs/BOM generator for DIY hardware</description>
+    <groupId>com.theshipboard</groupId>
+    <artifactId>theshipboard</artifactId>
+    <version>0.2.0</version>
+    <name>TheShipboard</name>
+    <description>TheShipboard — hybrid AI/deterministic firmware generator for DIY hardware</description>
 
     <properties>
         <java.version>21</java.version>

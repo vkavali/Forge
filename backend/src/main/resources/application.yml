@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: forge
+    name: theshipboard
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:forge}
     username: ${POSTGRES_USER:forge}
@@ -39,6 +39,9 @@ claude:
   api-key: ${CLAUDE_API_KEY:}
   model: ${CLAUDE_MODEL:claude-sonnet-4-20250514}
   max-tokens: 4096
+
+build-runner:
+  url: ${BUILD_RUNNER_URL:http://localhost:5100}
 
 app:
   cors:

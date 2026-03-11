@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderPlus, LogOut, Cpu } from 'lucide-react';
+import { LayoutDashboard, FolderPlus, LogOut, Cpu, GraduationCap, BookOpen, Users } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useRouter } from 'next/navigation';
 import { cn } from '../../lib/utils';
@@ -10,6 +10,9 @@ import { cn } from '../../lib/utils';
 const navItems = [
   { href: '/dashboard', label: 'Projects', icon: LayoutDashboard },
   { href: '/dashboard/projects/new', label: 'New Project', icon: FolderPlus },
+  { href: '/dashboard/learn', label: 'Learn', icon: GraduationCap },
+  { href: '/dashboard/templates', label: 'Templates', icon: BookOpen },
+  { href: '/dashboard/classroom', label: 'Classroom', icon: Users },
 ];
 
 export default function Sidebar() {

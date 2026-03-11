@@ -1,4 +1,4 @@
-import { ApiResponse, AuthResponse, BoardDefinition, DeviceCategoryInfo, Project, CreateProjectRequest, GenerationJob } from './types';
+import { ApiResponse, AuthResponse, BoardDefinition, DeviceCategoryInfo, Project, CreateProjectRequest, GenerationJob, ProjectTemplate, Classroom, ClassroomAssignment, AssignmentSubmission } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -49,5 +49,33 @@ export const api = {
     getJob: (jobId: string) => fetchApi<GenerationJob>(`/jobs/${jobId}`),
     getArtifact: (jobId: string, key: string) =>
       fetchApi<string>(`/artifacts/${jobId}?key=${encodeURIComponent(key)}`),
+  },
+  templates: {
+    list: (category?: string, difficulty?: string) => {
+      const params = new URLSearchParams();
+      if (category) params.set('category', category);
+      if (difficulty) params.set('difficulty', difficulty);
+      const qs = params.toString();
+      return fetchApi<ProjectTemplate[]>(`/templates/public${qs ? '?' + qs : ''}`);
+    },
+    get: (id: string) => fetchApi<ProjectTemplate>(`/templates/public/${id}`),
+    mine: () => fetchApi<ProjectTemplate[]>('/templates/mine'),
+    create: (data: Partial<ProjectTemplate>) =>
+      fetchApi<ProjectTemplate>('/templates', { method: 'POST', body: JSON.stringify(data) }),
+  },
+  classrooms: {
+    create: (data: { name: string; description: string }) =>
+      fetchApi<Classroom>('/classrooms', { method: 'POST', body: JSON.stringify(data) }),
+    teaching: () => fetchApi<Classroom[]>('/classrooms/teaching'),
+    enrolled: () => fetchApi<Classroom[]>('/classrooms/enrolled'),
+    join: (joinCode: string) =>
+      fetchApi<Classroom>('/classrooms/join', { method: 'POST', body: JSON.stringify({ joinCode }) }),
+    members: (id: string) => fetchApi<unknown[]>(`/classrooms/${id}/members`),
+    createAssignment: (id: string, data: { templateId?: string; title: string; instructions: string }) =>
+      fetchApi<ClassroomAssignment>(`/classrooms/${id}/assignments`, { method: 'POST', body: JSON.stringify(data) }),
+    assignments: (id: string) => fetchApi<ClassroomAssignment[]>(`/classrooms/${id}/assignments`),
+    submitAssignment: (assignmentId: string, projectId: string) =>
+      fetchApi<AssignmentSubmission>(`/classrooms/assignments/${assignmentId}/submit`, { method: 'POST', body: JSON.stringify({ projectId }) }),
+    submissions: (assignmentId: string) => fetchApi<AssignmentSubmission[]>(`/classrooms/assignments/${assignmentId}/submissions`),
   },
 };
