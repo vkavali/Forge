@@ -49,7 +49,7 @@ public class GenerationService {
                              DocsEnrichmentService docsService, BomEnrichmentService bomService,
                              ReadmeEnrichmentService readmeService, AnnotationService annotationService,
                              ConceptGuideService conceptGuideService, BuildGuideService buildGuideService,
-                             MinioStorageService storageService) {
+                             @org.springframework.beans.factory.annotation.Autowired(required = false) MinioStorageService storageService) {
         this.jobRepository = jobRepository;
         this.projectService = projectService;
         this.intentService = intentService;
