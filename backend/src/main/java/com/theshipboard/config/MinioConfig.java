@@ -7,16 +7,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(name = "minio.endpoint", matchIfMissing = false)
+@ConditionalOnProperty(name = "MINIO_ENDPOINT")
 public class MinioConfig {
 
-    @Value("${minio.endpoint}")
+    @Value("${MINIO_ENDPOINT}")
     private String endpoint;
 
-    @Value("${minio.access-key}")
+    @Value("${MINIO_ROOT_USER:minioadmin}")
     private String accessKey;
 
-    @Value("${minio.secret-key}")
+    @Value("${MINIO_ROOT_PASSWORD:minioadmin}")
     private String secretKey;
 
     @Bean
