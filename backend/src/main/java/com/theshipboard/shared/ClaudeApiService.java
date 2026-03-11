@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
 public class ClaudeApiService {
@@ -18,12 +19,14 @@ public class ClaudeApiService {
     private final ObjectMapper objectMapper;
     private final String model;
     private final int maxTokens;
+    private final String apiKey;
 
     public ClaudeApiService(
             @Value("${claude.api-key}") String apiKey,
             @Value("${claude.model}") String model,
             @Value("${claude.max-tokens}") int maxTokens,
             ObjectMapper objectMapper) {
+        this.apiKey = apiKey;
         this.model = model;
         this.maxTokens = maxTokens;
         this.objectMapper = objectMapper;
@@ -37,6 +40,10 @@ public class ClaudeApiService {
     }
 
     public String sendMessage(String systemPrompt, String userMessage) {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new RuntimeException("Claude API key is not configured. Set CLAUDE_API_KEY environment variable.");
+        }
+
         ObjectNode body = objectMapper.createObjectNode();
         body.put("model", model);
         body.put("max_tokens", maxTokens);
@@ -46,20 +53,29 @@ public class ClaudeApiService {
         msg.put("role", "user");
         msg.put("content", userMessage);
 
-        JsonNode response = webClient.post()
-                .uri("/v1/messages")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .block();
+        try {
+            JsonNode response = webClient.post()
+                    .uri("/v1/messages")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
 
-        if (response != null && response.has("content")) {
-            JsonNode content = response.get("content");
-            if (content.isArray() && !content.isEmpty()) {
-                return content.get(0).get("text").asText();
+            if (response != null && response.has("content")) {
+                JsonNode content = response.get("content");
+                if (content.isArray() && !content.isEmpty()) {
+                    return content.get(0).get("text").asText();
+                }
             }
+            throw new RuntimeException("Empty response from Claude API");
+        } catch (WebClientResponseException e) {
+            log.error("Claude API error: HTTP {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Claude API error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(), e);
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("Claude API")) throw e;
+            log.error("Claude API call failed: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to call Claude API: " + e.getMessage(), e);
         }
-        throw new RuntimeException("Empty response from Claude API");
     }
 
     public String sendJsonMessage(String systemPrompt, String userMessage) {
