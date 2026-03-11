@@ -11,14 +11,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM eclipse-temurin:21-jdk AS backend-build
+RUN apt-get update && apt-get install -y --no-install-recommends maven && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/backend
-COPY backend/.mvn .mvn
-COPY backend/mvnw .
-RUN chmod +x mvnw
 COPY backend/pom.xml .
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 COPY backend/src ./src
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 FROM eclipse-temurin:21-jre
 RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm curl && rm -rf /var/lib/apt/lists/*
