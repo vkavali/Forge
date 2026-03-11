@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Parse Railway's DATABASE_URL into Spring Boot datasource env vars
-# DATABASE_URL format: postgresql://user:password@host:port/database
 if [ -n "$DATABASE_URL" ]; then
     DB_STRIPPED="${DATABASE_URL#postgresql://}"
     DB_USERPASS="${DB_STRIPPED%%@*}"
@@ -11,16 +10,23 @@ if [ -n "$DATABASE_URL" ]; then
     export SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOSTDB}"
 fi
 
-# Spring Boot on internal port 8081
+# Generate nginx config with the Railway PORT
+export PORT=${PORT:-8080}
+envsubst '${PORT}' < /app/nginx.conf.template > /tmp/nginx.conf
+
+# Start Spring Boot on internal port 8081
 java -Dserver.port=8081 -jar /app/backend.jar &
 BACKEND_PID=$!
 
-# Next.js on Railway's public PORT (defaults to 8080)
-# Next.js rewrites proxy /api/* to Spring Boot on 8081
+# Start Next.js on internal port 3000
 cd /app/frontend
-PORT=${PORT:-8080} node server.js &
+PORT=3000 HOSTNAME=0.0.0.0 node server.js &
 FRONTEND_PID=$!
 
-# Wait for either process to exit
-wait $BACKEND_PID $FRONTEND_PID
+# Start nginx on Railway's PORT (reverse proxy)
+nginx -c /tmp/nginx.conf -g 'daemon off;' &
+NGINX_PID=$!
+
+# Wait for any process to exit
+wait -n $BACKEND_PID $FRONTEND_PID $NGINX_PID 2>/dev/null || wait $BACKEND_PID $FRONTEND_PID $NGINX_PID
 exit $?

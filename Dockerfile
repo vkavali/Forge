@@ -19,7 +19,9 @@ COPY backend/src ./src
 RUN mvn clean package -DskipTests -B
 
 FROM eclipse-temurin:21-jre
-RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs npm nginx gettext-base curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Backend
@@ -29,8 +31,9 @@ COPY --from=backend-build /app/backend/target/*.jar backend.jar
 COPY --from=frontend-build /app/frontend/.next/standalone ./frontend/
 COPY --from=frontend-build /app/frontend/.next/static ./frontend/.next/static
 
+# Nginx config template + startup script
+COPY nginx.conf.template .
 COPY start.sh .
 RUN chmod +x start.sh
 
-EXPOSE 8080 3000
 ENTRYPOINT ["./start.sh"]
