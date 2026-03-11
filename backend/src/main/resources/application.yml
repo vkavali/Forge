@@ -5,9 +5,9 @@ spring:
   application:
     name: theshipboard
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:forge}
-    username: ${POSTGRES_USER:forge}
-    password: ${POSTGRES_PASSWORD:forge}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/forge}
+    username: ${DATABASE_USERNAME:forge}
+    password: ${DATABASE_PASSWORD:forge}
     hikari:
       maximum-pool-size: 10
   jpa:
