@@ -4,10 +4,7 @@ server:
 spring:
   application:
     name: theshipboard
-  datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/forge?user=forge&password=forge}
-    hikari:
-      maximum-pool-size: 10
+  datasource: {}
   jpa:
     hibernate:
       ddl-auto: update
