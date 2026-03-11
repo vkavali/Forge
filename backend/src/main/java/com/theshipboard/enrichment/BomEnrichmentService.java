@@ -8,6 +8,8 @@ import com.theshipboard.intent.SensorIntent;
 import com.theshipboard.intent.ActuatorIntent;
 import com.theshipboard.project.entity.Project;
 import com.theshipboard.shared.ClaudeApiService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import java.util.List;
 @Service
 public class BomEnrichmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(BomEnrichmentService.class);
     private final ClaudeApiService claudeApi;
     private final BoardCatalog boardCatalog;
 
@@ -55,6 +58,7 @@ public class BomEnrichmentService {
         try {
             return claudeApi.sendMessage(systemPrompt, userPrompt);
         } catch (Exception e) {
+            log.warn("BOM price enrichment failed, returning base BOM", e);
             return bom.toString();
         }
     }

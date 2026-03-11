@@ -23,6 +23,7 @@ export default function TemplateDetailPage() {
   const [template, setTemplate] = useState<ProjectTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -53,7 +54,7 @@ export default function TemplateDetailPage() {
       const genRes = await api.generation.start(projectRes.data.id);
       router.push(`/dashboard/projects/${projectRes.data.id}?jobId=${genRes.data.id}`);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to start project');
+      setError(err instanceof Error ? err.message : 'Failed to start project');
       setStarting(false);
     }
   };
@@ -90,12 +91,16 @@ export default function TemplateDetailPage() {
         </Button>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-400">{error}</div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-lg">Learning Objectives</CardTitle></CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {template.learningObjectives.map((obj, i) => (
+              {(template.learningObjectives ?? []).map((obj, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                   {obj}

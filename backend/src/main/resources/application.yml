@@ -31,6 +31,7 @@ claude:
   api-key: ${CLAUDE_API_KEY:}
   model: ${CLAUDE_MODEL:claude-sonnet-4-20250514}
   max-tokens: 4096
+  api-version: ${CLAUDE_API_VERSION:2023-06-01}
 
 build-runner:
   url: ${BUILD_RUNNER_URL:http://localhost:5100}

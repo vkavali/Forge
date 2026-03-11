@@ -4,6 +4,7 @@ import com.theshipboard.auth.dto.AuthResponse;
 import com.theshipboard.auth.dto.LoginRequest;
 import com.theshipboard.auth.dto.RegisterRequest;
 import com.theshipboard.auth.entity.User;
+import com.theshipboard.auth.exception.DuplicateEmailException;
 import com.theshipboard.auth.repository.UserRepository;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +25,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new DuplicateEmailException("Email already registered");
         }
         User user = User.builder()
                 .email(request.getEmail())

@@ -23,7 +23,12 @@ public class BoardController {
             @RequestParam(required = false) String category) {
         List<BoardDefinition> boards;
         if (category != null && !category.isBlank()) {
-            DeviceCategory cat = DeviceCategory.valueOf(category.toUpperCase());
+            DeviceCategory cat;
+            try {
+                cat = DeviceCategory.valueOf(category.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid category: " + category);
+            }
             boards = boardCatalog.getByCategory(cat);
         } else {
             boards = boardCatalog.getAll();

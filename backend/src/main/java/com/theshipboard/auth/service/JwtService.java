@@ -42,7 +42,11 @@ public class JwtService {
     }
 
     public UUID getUserId(String token) {
-        return UUID.fromString(parseToken(token).getSubject());
+        String subject = parseToken(token).getSubject();
+        if (subject == null) {
+            throw new IllegalStateException("Token has no subject");
+        }
+        return UUID.fromString(subject);
     }
 
     public boolean isValid(String token) {

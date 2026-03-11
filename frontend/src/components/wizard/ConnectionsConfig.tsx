@@ -13,15 +13,22 @@ export default function ConnectionsConfig() {
   const [mappings, setMappings] = useState<PinMapping[]>(
     (wizardData.connectionsConfig?.pins as PinMapping[]) || [{ pin: '', component: '', description: '' }]
   );
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const addRow = () => setMappings([...mappings, { pin: '', component: '', description: '' }]);
   const removeRow = (i: number) => setMappings(mappings.filter((_, idx) => idx !== i));
   const updateRow = (i: number, field: keyof PinMapping, value: string) => {
     const updated = [...mappings]; updated[i] = { ...updated[i], [field]: value }; setMappings(updated);
+    setValidationError(null);
   };
 
   const next = () => {
-    updateWizardData({ connectionsConfig: { pins: mappings.filter((m) => m.pin || m.component) } });
+    const incomplete = mappings.filter((m) => (m.pin && !m.component) || (!m.pin && m.component));
+    if (incomplete.length > 0) {
+      setValidationError('Each mapping must have both a pin and a component. Remove empty rows or complete them.');
+      return;
+    }
+    updateWizardData({ connectionsConfig: { pins: mappings.filter((m) => m.pin && m.component) } });
     setWizardStep('behavior');
   };
 
@@ -42,6 +49,9 @@ export default function ConnectionsConfig() {
         ))}
         <Button variant="outline" size="sm" onClick={addRow}><Plus className="w-4 h-4 mr-1" /> Add Pin</Button>
       </div>
+      {validationError && (
+        <div className="mt-4 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-400">{validationError}</div>
+      )}
       <div className="mt-8 flex justify-end"><Button onClick={next}>Continue</Button></div>
     </div>
   );

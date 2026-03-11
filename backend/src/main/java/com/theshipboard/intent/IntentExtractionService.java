@@ -38,6 +38,9 @@ public class IntentExtractionService {
         String userPrompt = buildUserPrompt(project, board);
 
         String jsonResponse = claudeApi.sendJsonMessage(systemPrompt, userPrompt);
+        if (jsonResponse == null || jsonResponse.isBlank()) {
+            throw new RuntimeException("Claude returned empty response for intent extraction");
+        }
 
         try {
             // Clean response - strip markdown fences if present

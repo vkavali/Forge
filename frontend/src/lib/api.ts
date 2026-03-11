@@ -1,4 +1,5 @@
 import { ApiResponse, AuthResponse, BoardDefinition, DeviceCategoryInfo, Project, CreateProjectRequest, GenerationJob, ProjectTemplate, Classroom, ClassroomAssignment, AssignmentSubmission } from './types';
+import { clearAuth } from './auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -17,6 +18,13 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<Api
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
   if (!res.ok) {
+    if (res.status === 401) {
+      clearAuth();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth/login';
+      }
+      throw new Error('Session expired. Please log in again.');
+    }
     const error = await res.json().catch(() => ({ message: 'Request failed' }));
     throw new Error(error.message || `HTTP ${res.status}`);
   }

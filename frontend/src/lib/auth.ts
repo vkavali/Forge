@@ -16,5 +16,10 @@ export function getAuth() {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem('token');
   if (!token) return null;
-  return { token, userId: localStorage.getItem('userId') || '', email: localStorage.getItem('userEmail') || '', name: localStorage.getItem('userName') || '' };
+  return {
+    token,
+    userId: localStorage.getItem('userId') ?? null,
+    email: localStorage.getItem('userEmail') ?? null,
+    name: localStorage.getItem('userName') ?? null,
+  };
 }

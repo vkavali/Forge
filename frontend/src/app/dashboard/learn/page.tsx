@@ -18,13 +18,16 @@ export default function LearnPage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await api.templates.list(categoryFilter || undefined, difficultyFilter || undefined);
         setTemplates(res.data);
-      } catch {} finally { setLoading(false); }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load templates');
+      } finally { setLoading(false); }
     };
     setLoading(true);
     load();
@@ -62,6 +65,10 @@ export default function LearnPage() {
         </select>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-400">{error}</div>
+      )}
+
       {loading ? (
         <div className="flex items-center gap-2 text-gray-400"><Loader2 className="w-5 h-5 animate-spin" /> Loading templates...</div>
       ) : templates.length === 0 ? (
@@ -90,7 +97,7 @@ export default function LearnPage() {
                   </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {template.estimatedMinutes} min</span>
-                    <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {template.learningObjectives.length} objectives</span>
+                    <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {(template.learningObjectives ?? []).length} objectives</span>
                   </div>
                 </CardContent>
               </Card>

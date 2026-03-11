@@ -25,6 +25,7 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(!!activeJobId);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [genError, setGenError] = useState<string | null>(null);
 
   const loadProject = useCallback(async () => {
     try {
@@ -44,8 +45,9 @@ export default function ProjectDetailPage() {
   const handleGenComplete = useCallback(() => { setGenerating(false); loadProject(); }, [loadProject]);
 
   const handleRegenerate = async () => {
+    setGenError(null);
     try { const res = await api.generation.start(projectId); setGenerating(true); window.history.replaceState(null, '', `?jobId=${res.data.id}`); }
-    catch (err: unknown) { alert(err instanceof Error ? err.message : 'Failed'); }
+    catch (err: unknown) { setGenError(err instanceof Error ? err.message : 'Failed to start generation'); }
   };
 
   const getArtifact = (suffix: string) => Object.entries(artifacts).find(([key]) => key.endsWith(suffix))?.[1] || '';
@@ -99,6 +101,10 @@ export default function ProjectDetailPage() {
           <Button onClick={handleRegenerate} disabled={generating}>{generating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Rocket className="w-4 h-4 mr-2" />}{generating ? 'Generating...' : 'Generate'}</Button>
         </div>
       </div>
+
+      {genError && (
+        <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-400">{genError}</div>
+      )}
 
       {showStream && <div className="mb-6"><GenerationStream jobId={(activeJobId || latestJob?.id)!} onComplete={handleGenComplete} /></div>}
 
