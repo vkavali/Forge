@@ -1,5 +1,6 @@
 package com.theshipboard.generation.service;
 
+import io.minio.MinioClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 
@@ -7,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 @Service
-@ConditionalOnMissingBean(MinioStorageService.class)
+@ConditionalOnMissingBean(MinioClient.class)
 public class InMemoryStorageService implements StorageService {
 
     private final Map<String, String> store = new ConcurrentHashMap<>();
