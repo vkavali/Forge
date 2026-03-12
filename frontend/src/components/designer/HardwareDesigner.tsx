@@ -47,7 +47,7 @@ export default function HardwareDesigner({
   }
 
   return (
-    <div className="flex flex-col h-[640px] rounded-xl border border-zinc-800 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-10rem)] min-h-[500px] rounded-xl border border-zinc-800 overflow-hidden">
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2
                       bg-zinc-900 border-b border-zinc-800 shrink-0">

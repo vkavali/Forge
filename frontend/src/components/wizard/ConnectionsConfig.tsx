@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic';
 
 const HardwareDesigner = dynamic(
   () => import('../designer/HardwareDesigner'),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-[640px] text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading designer...</div> }
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[calc(100vh-10rem)] text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading designer...</div> }
 );
 
 interface PinMapping { pin: string; component: string; description: string; }
@@ -107,7 +107,7 @@ export default function ConnectionsConfig() {
 
       {mode === 'visual' ? (
         boardLoading ? (
-          <div className="flex items-center justify-center h-[640px] text-gray-400">
+          <div className="flex items-center justify-center h-[calc(100vh-10rem)] text-gray-400">
             <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading board...
           </div>
         ) : board ? (
