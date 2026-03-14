@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../../lib/api';
 import { Loader2, CheckCircle, XCircle, Brain, Code2, FileText, Shield } from 'lucide-react';
 
@@ -34,13 +34,109 @@ export default function GenerationStream({ jobId, onComplete }: Props) {
     status: 'connecting', step: 'Connecting...', progress: 0, currentLayer: 0,
     layers: { 1: { status: 'pending' }, 2: { status: 'pending' }, 3: { status: 'pending' }, 4: { status: 'pending' } },
   });
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  const handleEvent = useCallback((data: Record<string, unknown>) => {
+    const type = data.type as string | undefined;
+
+    // Dispatch by explicit type first, fall back to content inspection
+    if (type === 'complete' || data.artifactKeys) {
+      setState(s => ({
+        ...s,
+        status: 'complete',
+        step: 'Complete!',
+        progress: 100,
+        compileSuccess: data.compileSuccess as boolean | undefined,
+        layers: { 1: { status: 'complete' }, 2: { status: 'complete' }, 3: { status: 'complete' }, 4: { status: 'complete' } },
+      }));
+      onCompleteRef.current?.();
+      return;
+    }
+
+    if (type === 'error' || (data.message && !data.step && !data.layer && !data.artifactKeys)) {
+      setState(s => ({ ...s, status: 'error', error: data.message as string }));
+      return;
+    }
+
+    if (type === 'layer' || (data.layer !== undefined && data.status)) {
+      setState(s => ({
+        ...s,
+        status: 'running',
+        currentLayer: data.layer as number,
+        layers: {
+          ...s.layers,
+          [data.layer as number]: {
+            status: data.status as LayerState['status'],
+            message: data.message as string | undefined,
+            success: data.success as boolean | undefined,
+          },
+        },
+      }));
+    }
+
+    if (type === 'progress' || data.step) {
+      setState(s => ({
+        ...s,
+        status: 'running',
+        step: (data.step as string) || s.step,
+        progress: (data.progress as number) || s.progress,
+        currentLayer: (data.layer as number) || s.currentLayer,
+      }));
+    }
+  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const url = api.generation.streamUrl(jobId);
+    const abortController = new AbortController();
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+    const pollJob = async () => {
+      try {
+        const jobRes = await api.generation.getJob(jobId);
+        const job = jobRes.data;
+        if (job.status === 'COMPLETED') {
+          setState({
+            status: 'complete', step: 'Complete!', progress: 100, currentLayer: 4,
+            compileSuccess: job.compileSuccess ?? undefined,
+            layers: { 1: { status: 'complete' }, 2: { status: 'complete' }, 3: { status: 'complete' }, 4: { status: 'complete' } },
+          });
+          onCompleteRef.current?.();
+          if (pollInterval) clearInterval(pollInterval);
+        } else if (job.status === 'FAILED') {
+          setState(s => ({
+            ...s, status: 'error', step: 'Failed', progress: s.progress,
+            error: job.errorMessage || 'Unknown error', layers: s.layers,
+          }));
+          if (pollInterval) clearInterval(pollInterval);
+        } else {
+          setState(s => ({
+            ...s, status: 'running',
+            step: job.currentStep || 'Processing...',
+            progress: job.progress,
+            currentLayer: job.currentLayer,
+            layers: s.layers,
+          }));
+        }
+      } catch {
+        // Poll will retry on next interval
+      }
+    };
+
+    const startPolling = () => {
+      if (!pollInterval && !abortController.signal.aborted) {
+        pollJob();
+        pollInterval = setInterval(pollJob, 3000);
+      }
+    };
+
     const fetchStream = async () => {
       try {
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const token = localStorage.getItem('token');
+        const url = api.generation.streamUrl(jobId);
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: abortController.signal,
+        });
         if (!res.ok || !res.body) throw new Error('Stream failed');
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -55,76 +151,24 @@ export default function GenerationStream({ jobId, onComplete }: Props) {
             if (line.startsWith('data:')) {
               try {
                 const data = JSON.parse(line.slice(5));
-
-                // Layer event
-                if (data.layer !== undefined && data.status) {
-                  setState(s => ({
-                    ...s,
-                    status: 'running',
-                    currentLayer: data.layer,
-                    layers: {
-                      ...s.layers,
-                      [data.layer]: {
-                        status: data.status,
-                        message: data.message,
-                        success: data.success,
-                      },
-                    },
-                  }));
-                }
-
-                // Progress event
-                if (data.step) {
-                  setState(s => ({
-                    ...s,
-                    status: 'running',
-                    step: data.step,
-                    progress: data.progress || s.progress,
-                    currentLayer: data.layer || s.currentLayer,
-                  }));
-                }
-
-                // Complete
-                if (data.artifactKeys) {
-                  setState(s => ({
-                    ...s,
-                    status: 'complete',
-                    step: 'Complete!',
-                    progress: 100,
-                    compileSuccess: data.compileSuccess,
-                    layers: { 1: { status: 'complete' }, 2: { status: 'complete' }, 3: { status: 'complete' }, 4: { status: 'complete' } },
-                  }));
-                  onComplete?.();
-                }
-
-                // Error
-                if (data.message && !data.step && !data.layer && !data.artifactKeys) {
-                  setState(s => ({ ...s, status: 'error', error: data.message }));
-                }
-              } catch {}
+                handleEvent(data);
+              } catch { /* skip malformed JSON */ }
             }
           }
         }
       } catch {
-        try {
-          const jobRes = await api.generation.getJob(jobId);
-          const job = jobRes.data;
-          if (job.status === 'COMPLETED') {
-            setState({ status: 'complete', step: 'Complete!', progress: 100, currentLayer: 4, compileSuccess: job.compileSuccess ?? undefined,
-              layers: { 1: { status: 'complete' }, 2: { status: 'complete' }, 3: { status: 'complete' }, 4: { status: 'complete' } } });
-            onComplete?.();
-          } else if (job.status === 'FAILED') {
-            setState(s => ({ ...s, status: 'error', step: 'Failed', progress: 0, error: job.errorMessage || 'Unknown error',
-              layers: s.layers }));
-          } else {
-            setState(s => ({ ...s, status: 'running', step: job.currentStep || 'Processing...', progress: job.progress,
-              currentLayer: job.currentLayer, layers: s.layers }));
-          }
-        } catch {}
+        if (abortController.signal.aborted) return;
+        startPolling();
       }
     };
+
     fetchStream();
-  }, [jobId, onComplete]);
+
+    return () => {
+      abortController.abort();
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [jobId, handleEvent]);
 
   const getLayerIcon = (layerNum: number) => {
     const layerState = state.layers[layerNum];

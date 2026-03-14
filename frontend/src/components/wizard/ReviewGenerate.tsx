@@ -11,10 +11,12 @@ import { ArrowLeft, Loader2, Rocket } from 'lucide-react';
 export default function ReviewGenerate() {
   const { wizardData, setWizardStep, resetWizard } = useProjectStore();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleGenerate = async () => {
     setLoading(true);
+    setError(null);
     try {
       const projectRes = await api.projects.create({
         name: wizardData.name || 'Untitled Project', description: wizardData.description || '',
@@ -24,7 +26,9 @@ export default function ReviewGenerate() {
       const jobRes = await api.generation.start(projectRes.data.id);
       resetWizard();
       router.push(`/dashboard/projects/${projectRes.data.id}?jobId=${jobRes.data.id}`);
-    } catch (err: unknown) { alert(err instanceof Error ? err.message : 'Failed'); } finally { setLoading(false); }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to generate project');
+    } finally { setLoading(false); }
   };
 
   const items = [{ label: 'Category', value: wizardData.category }, { label: 'Board', value: wizardData.boardId }, { label: 'Project Name', value: wizardData.name }, { label: 'Description', value: wizardData.description }];
@@ -40,6 +44,9 @@ export default function ReviewGenerate() {
           {wizardData.behaviorSpec && (<div><span className="text-sm text-gray-400">Behavior</span><p className="text-sm text-gray-300 mt-1 whitespace-pre-line">{wizardData.behaviorSpec}</p></div>)}
         </CardContent>
       </Card>
+      {error && (
+        <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-400">{error}</div>
+      )}
       <Button onClick={handleGenerate} disabled={loading} size="lg">
         {loading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Generating...</> : <><Rocket className="w-5 h-5 mr-2" /> Generate Project</>}
       </Button>

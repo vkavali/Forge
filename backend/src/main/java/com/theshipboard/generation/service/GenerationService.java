@@ -67,6 +67,9 @@ public class GenerationService {
     }
 
     public String getArtifactContent(UUID jobId, String key, UUID userId) {
+        GenerationJob job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("Job not found"));
+        projectService.getProjectEntity(job.getProjectId(), userId); // verifies ownership
         return generationRunner.getArtifactContent(key);
     }
 }

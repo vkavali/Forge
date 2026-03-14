@@ -1,6 +1,7 @@
 package com.theshipboard.education.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -17,14 +18,17 @@ public class ProjectTemplate {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @NotBlank(message = "Name is required")
     @Column(nullable = false)
     private String name;
 
     private String description;
 
+    @NotBlank(message = "Category is required")
     @Column(nullable = false)
     private String category;
 
+    @NotBlank(message = "Board ID is required")
     @Column(name = "board_id", nullable = false)
     private String boardId;
 

@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { DeviceCategoryInfo } from '../../lib/types';
 import { useProjectStore } from '../../stores/projectStore';
 import { Card } from '../ui/card';
-import { Cpu, Code, Server, Bot, Navigation, Car, Zap, Printer, CircuitBoard, Watch, Music, Factory } from 'lucide-react';
+import { Cpu, Code, Server, Bot, Navigation, Car, Zap, Printer, CircuitBoard, Watch, Music, Factory, Loader2 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   cpu: Cpu, code: Code, server: Server, bot: Bot, navigation: Navigation,
@@ -14,11 +14,28 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export default function CategorySelector() {
   const [categories, setCategories] = useState<DeviceCategoryInfo[]>([]);
+  const [loading, setLoading] = useState(true);
   const { wizardData, updateWizardData, setWizardStep } = useProjectStore();
 
-  useEffect(() => { api.boards.categories().then((res) => setCategories(res.data)); }, []);
+  useEffect(() => {
+    api.boards.categories()
+      .then((res) => setCategories(res.data))
+      .finally(() => setLoading(false));
+  }, []);
 
   const select = (cat: DeviceCategoryInfo) => { updateWizardData({ category: cat.id }); setWizardStep('board'); };
+
+  if (loading) {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-2">Choose a Category</h2>
+        <p className="text-gray-400 mb-6">Select the type of hardware project you want to build.</p>
+        <div className="flex items-center justify-center py-12 text-gray-400">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading categories...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

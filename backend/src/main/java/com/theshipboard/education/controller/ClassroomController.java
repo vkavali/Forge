@@ -47,19 +47,25 @@ public class ClassroomController {
     }
 
     @GetMapping("/{id}/members")
-    public ResponseEntity<ApiResponse<List<ClassroomMember>>> members(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<List<ClassroomMember>>> members(Authentication auth, @PathVariable UUID id) {
+        UUID userId = (UUID) auth.getPrincipal();
+        classroomService.verifyClassroomAccess(id, userId);
         return ResponseEntity.ok(ApiResponse.ok(classroomService.getMembers(id)));
     }
 
     @PostMapping("/{id}/assignments")
-    public ResponseEntity<ApiResponse<ClassroomAssignment>> createAssignment(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse<ClassroomAssignment>> createAssignment(Authentication auth, @PathVariable UUID id, @RequestBody Map<String, String> body) {
+        UUID userId = (UUID) auth.getPrincipal();
+        classroomService.verifyTeacher(id, userId);
         UUID templateId = body.get("templateId") != null ? UUID.fromString(body.get("templateId")) : null;
         return ResponseEntity.ok(ApiResponse.ok("Assignment created",
                 classroomService.createAssignment(id, templateId, body.get("title"), body.get("instructions"))));
     }
 
     @GetMapping("/{id}/assignments")
-    public ResponseEntity<ApiResponse<List<ClassroomAssignment>>> assignments(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<List<ClassroomAssignment>>> assignments(Authentication auth, @PathVariable UUID id) {
+        UUID userId = (UUID) auth.getPrincipal();
+        classroomService.verifyClassroomAccess(id, userId);
         return ResponseEntity.ok(ApiResponse.ok(classroomService.getAssignments(id)));
     }
 
@@ -73,7 +79,9 @@ public class ClassroomController {
     }
 
     @GetMapping("/assignments/{assignmentId}/submissions")
-    public ResponseEntity<ApiResponse<List<AssignmentSubmission>>> submissions(@PathVariable UUID assignmentId) {
+    public ResponseEntity<ApiResponse<List<AssignmentSubmission>>> submissions(Authentication auth, @PathVariable UUID assignmentId) {
+        UUID userId = (UUID) auth.getPrincipal();
+        classroomService.verifySubmissionsAccess(assignmentId, userId);
         return ResponseEntity.ok(ApiResponse.ok(classroomService.getSubmissions(assignmentId)));
     }
 }

@@ -3,6 +3,8 @@ package com.theshipboard.enrichment;
 import com.theshipboard.assembler.AssembledCode;
 import com.theshipboard.assembler.CodeFile;
 import com.theshipboard.shared.ClaudeApiService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
 @Service
 public class AnnotationService {
 
+    private static final Logger log = LoggerFactory.getLogger(AnnotationService.class);
     private final ClaudeApiService claudeApi;
 
     public AnnotationService(ClaudeApiService claudeApi) {
@@ -33,6 +36,7 @@ public class AnnotationService {
                 if (clean.startsWith("```")) clean = clean.replaceAll("^```[a-z]*\\n?", "").replaceAll("\\n?```$", "").trim();
                 return CodeFile.builder().filename(file.getFilename()).content(clean).contentType(file.getContentType()).build();
             } catch (Exception e) {
+                log.warn("Annotation failed for file {}, returning original", file.getFilename(), e);
                 return file;
             }
         }).toList();

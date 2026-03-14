@@ -3,6 +3,7 @@ package com.theshipboard.education.controller;
 import com.theshipboard.education.entity.ProjectTemplate;
 import com.theshipboard.education.service.TemplateService;
 import com.theshipboard.shared.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +43,7 @@ public class TemplateController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProjectTemplate>> create(Authentication auth, @RequestBody ProjectTemplate template) {
+    public ResponseEntity<ApiResponse<ProjectTemplate>> create(Authentication auth, @Valid @RequestBody ProjectTemplate template) {
         UUID userId = (UUID) auth.getPrincipal();
         template.setCreatedBy(userId);
         return ResponseEntity.ok(ApiResponse.ok("Template created", templateService.create(template)));

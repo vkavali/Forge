@@ -202,8 +202,11 @@ public class GenerationRunner {
     private void sendEvent(UUID jobId, String eventType, Map<String, Object> data) {
         SseEmitter emitter = emitters.get(jobId);
         if (emitter != null) {
-            try { emitter.send(SseEmitter.event().name(eventType).data(data)); }
-            catch (IOException e) { emitters.remove(jobId); }
+            try {
+                Map<String, Object> payload = new HashMap<>(data);
+                payload.put("type", eventType);
+                emitter.send(SseEmitter.event().data(payload));
+            } catch (IOException e) { emitters.remove(jobId); }
         }
     }
 
